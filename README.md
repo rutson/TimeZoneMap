@@ -1,61 +1,64 @@
 # TimeZone Map
 
-Get timezone by latitude and longitude coordinates, similar Google TimeZone API.
+Get timezone by latitude and longitude coordinates within MySQL, similar Google TimeZone API.
 
 
 ### Requirements
 
 * Mysql: >= 5.6
 
-
 ### Use
 
-Execute a sql query for find timezone:
+Execute an SQL query to find timezone from given latitude and longitude:
 
 ```sql
 SELECT `Name` FROM `zone` WHERE ST_Contains(`Location`, POINT(37.620393, 55.75396));
 ```
-Query must retrun string "Europe/Moscow"
+Query returns string "Europe/Moscow"
 
 *Function POINT has arguments (Longitude, Latitude)*
+*note unconvential order!*
 
+### Manually assemble timezone table
 
-### Manual assembly timezone table
-
-1) Download and unzip file tz_world.zip in http://efele.net/maps/tz/world/
+1) Download latest version of Time Zone Shapefile from https://github.com/evansiroky/timezone-boundary-builder/releases
 
 ```bash
-wget http://efele.net/maps/tz/world/tz_world.zip -O tz_world.zip &&
-unzip tz_world.zip && 
-rm -f tz_world.zip
+wget https://github.com/evansiroky/timezone-boundary-builder/releases/latest/download/timezones.shapefile.zip &&
+unzip -j timezones.shapefile.zip
 ```
 
-2) Install [ogr2ogr](http://www.osgeo.org) tools included GDAL/OGR
+2) Install [ogr2ogr](http://www.osgeo.org) tools included in GDAL
 
-[Install manual for CentOS](https://github.com/wavded/ogre/wiki/Compiling-a-recent-ogr2ogr-from-source-on-CentOS-(RHEL))
-
-3) Convert tz_world.shp to CSV foramt use ogr2ogr
+Install on CentOS using
 ```bash
-/usr/local/bin/ogr2ogr -f "CSV" tz_world world/tz_world.shp -lco GEOMETRY=AS_WKT && 
-mv tz_world/tz_world.csv tz_world.csv && 
-rm -rf tz_world world
+sudo yum install gdal 
+```
+
+Other versions can be downloaded [https://gdal.org/download.html](here).
+
+3) Convert combined-shapefile.shp to CSV foramt using ogr2ogr
+```bash
+/usr//bin/ogr2ogr -f "CSV" timezonegeo combined-shapefile.shp -lco GEOMETRY=AS_WKT && 
+mv timezonegeo/combined-shapefile.csv timezonegeo.csv && 
+rm -rf timezonegeo
 ```
 
 4) Create table structure
 ```sql
-CREATE TABLE `zone` (
-  `Id` int(11) NOT NULL AUTO_INCREMENT,
-  `Name` varchar(255) NOT NULL,
-  `Location` geometry NOT NULL,
-  PRIMARY KEY (`Id`),
-  SPATIAL KEY `Location` (`Location`)
+CREATE TABLE `timezonegeo` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `location` geometry NOT NULL,
+  PRIMARY KEY (`id`),
+  SPATIAL KEY `location` (`location`)
 ) ENGINE=MyISAM;
 ```
 
-5) Import tz_world.csv in DB
+5a) Import tz_world.csv into MySQL database or...
 ```sql
-LOAD DATA INFILE '/path/to/tz_world.csv' 
-INTO TABLE zone 
+LOAD DATA LOCAL INFILE '/tmp/tz/timezonegeo.csv'
+INTO TABLE timezonegeo 
 FIELDS TERMINATED BY ',' 
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
@@ -66,3 +69,8 @@ id := null,
 Name := @Name,
 Location := GeomFromText(@Location);
 ```
+
+5b) ...Generate SQL file:
+```bash
+mysqldump DATEBASE_NAME timezonegeo --hex-blob --extended-insert=FALSE -r timezonegeo.sql
+``` 
