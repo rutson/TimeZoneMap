@@ -2,7 +2,6 @@
 
 Get timezone by latitude and longitude coordinates within MySQL, similar Google TimeZone API.
 
-
 ### Requirements
 
 * Mysql: >= 5.6
@@ -74,3 +73,6 @@ Location := GeomFromText(@Location);
 ```bash
 mysqldump DATEBASE_NAME timezonegeo --hex-blob --extended-insert=FALSE -r timezonegeo.sql
 ``` 
+## License
+
+The outputted data is licensed under the [Open Data Commons Open Database License (ODbL)](http://opendatacommons.org/licenses/odbl/).
