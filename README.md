@@ -36,7 +36,7 @@ sudo yum install gdal
 
 Other versions can be downloaded [https://gdal.org/download.html](here).
 
-3) Convert combined-shapefile.shp to CSV forat using ogr2ogr
+3) Convert combined-shapefile.shp to CSV format using ogr2ogr
 ```bash
 /usr//bin/ogr2ogr -f "CSV" timezonegeo combined-shapefile.shp -lco GEOMETRY=AS_WKT && 
 mv timezonegeo/combined-shapefile.csv timezonegeo.csv && 
